@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/plugins/power_pin" >
+        <file>icon.png</file>
+		<file>icon32.png</file>
+		<file>icons/_earth.png</file>
+        <file>icons/_emapa.png</file>
+        <file>icons/_g360.png</file>
+        <file>icons/_geoportal.png</file>
+        <file>icons/_geoportal2.png</file>
+        <file>icons/_gmw64.png</file>
+        <file>icons/_google.png</file>
+        <file>icons/_osm.png</file>
+        <file>icons/_streetview.png</file>
+        <file>icons/_ump.png</file>
+        <file>icons/_yandex.png</file>
+        <file>icons/_bing.png</file>
+    </qresource>
+</RCC>
