@@ -188,7 +188,7 @@ class PowerPin:
 
         portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing']
         self.portals = portals
-        ons = [True, True, True, True, True, True, True, True, True, True]
+        ons = [True, True, True, True, True, True, True, True, True, True, True]
 
         file_path = "power_pin_config.txt"
         if os.path.exists(file_path):
