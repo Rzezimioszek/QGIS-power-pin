@@ -14,5 +14,6 @@
         <file>icons/_ump.png</file>
         <file>icons/_yandex.png</file>
         <file>icons/_bing.png</file>
+        <file>icons/_streeteye.png</file>
     </qresource>
 </RCC>

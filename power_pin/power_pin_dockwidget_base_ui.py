@@ -16,14 +16,14 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDockWidget, QGridLayout,
-    QListWidget, QListWidgetItem, QPushButton, QSizePolicy,
-    QWidget)
+    QHBoxLayout, QLabel, QLayout, QListWidget,
+    QListWidgetItem, QPushButton, QSizePolicy, QWidget)
 
 class Ui_PowerPinDockWidgetBase(object):
     def setupUi(self, PowerPinDockWidgetBase):
         if not PowerPinDockWidgetBase.objectName():
             PowerPinDockWidgetBase.setObjectName(u"PowerPinDockWidgetBase")
-        PowerPinDockWidgetBase.resize(498, 207)
+        PowerPinDockWidgetBase.resize(498, 283)
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")
         self.gridLayout = QGridLayout(self.dockWidgetContents)
@@ -33,12 +33,34 @@ class Ui_PowerPinDockWidgetBase(object):
         self.listWidget.setEditTriggers(QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed|QAbstractItemView.SelectedClicked)
         self.listWidget.setSelectionMode(QAbstractItemView.MultiSelection)
 
-        self.gridLayout.addWidget(self.listWidget, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.listWidget, 2, 0, 1, 1)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.horizontalLayout.setContentsMargins(5, 5, 5, 5)
+        self.pushButton_2 = QPushButton(self.dockWidgetContents)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+
+        self.horizontalLayout.addWidget(self.pushButton_2)
+
+        self.pushButton_3 = QPushButton(self.dockWidgetContents)
+        self.pushButton_3.setObjectName(u"pushButton_3")
+
+        self.horizontalLayout.addWidget(self.pushButton_3)
 
         self.pushButton = QPushButton(self.dockWidgetContents)
         self.pushButton.setObjectName(u"pushButton")
 
-        self.gridLayout.addWidget(self.pushButton, 1, 0, 1, 1)
+        self.horizontalLayout.addWidget(self.pushButton)
+
+
+        self.gridLayout.addLayout(self.horizontalLayout, 5, 0, 1, 1)
+
+        self.label = QLabel(self.dockWidgetContents)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
 
         PowerPinDockWidgetBase.setWidget(self.dockWidgetContents)
 
@@ -49,6 +71,9 @@ class Ui_PowerPinDockWidgetBase(object):
 
     def retranslateUi(self, PowerPinDockWidgetBase):
         PowerPinDockWidgetBase.setWindowTitle(QCoreApplication.translate("PowerPinDockWidgetBase", u"Power Pin PL", None))
-        self.pushButton.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Zapisz", None))
+        self.pushButton_2.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Postaw mi kaw\u0119 :)", None))
+        self.pushButton_3.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"GitHub", None))
+        self.pushButton.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Ustaw i Zapisz", None))
+        self.label.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Ikony widoczne na pasku", None))
     # retranslateUi
 

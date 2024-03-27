@@ -186,12 +186,17 @@ class PowerPin:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         #
 
-        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing']
+        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye']
         self.portals = portals
-        ons = [True, True, True, True, True, True, True, True, True, True, True]
+        # ons = [True, True, True, True, True, True, True, True, True, True, True]
+
+        ons = [True] * 12
 
         file_path = "power_pin_config.txt"
         if os.path.exists(file_path):
+            
+            temp_ons = ons.copy()
+            temp_portals = portals.copy()
             portals = []
             ons = []
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -206,10 +211,20 @@ class PowerPin:
                         else:
                             ons.append(False)
 
+            if len(ons) < 12:
+                ons = temp_ons.copy()
+                portals = temp_portals.copy()
+
+
         else:
-            with open(file_path, 'w', encoding='utf-8') as file:
-                for portal in portals:
-                    file.write(f"{portal}\tON\n")
+            try:
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    for portal in portals:
+                        file.write(f"{portal}\tON\n")
+                QgsMessageLog.logMessage(f"Default setting loaded succesful")
+            except PermissionError:
+                QgsMessageLog.logMessage(f"Load without widget settings")
+
 
         # self.popupMenu = QMenu( self.iface.mainWindow() )
 
@@ -353,6 +368,16 @@ class PowerPin:
                     callback=lambda: self.put_pin(f"bing"),
                     parent=self.iface.mainWindow() #
                 )
+        if ons[11]:
+            portal = "streeteye"
+            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
+            btn = self.add_action(
+                    icon_path,
+                    text=self.tr(f'{portal.capitalize()}'),
+                    #callback=lambda: self.put_pin(portal),
+                    callback=lambda: self.put_pin(f"streeteye"),
+                    parent=self.iface.mainWindow() #
+                )
 
         
 
@@ -417,15 +442,17 @@ class PowerPin:
         l =  [item.text() for item in self.dockwidget.listWidget.selectedItems()]
 
         file_path = "power_pin_config.txt"
+        try:
+            with open(file_path, 'w', encoding='utf-8') as file:
+                for portal in self.portals:
+                    if portal in l:
+                        file.write(f"{portal}\tON\n")
+                    else:
+                        file.write(f"{portal}\tOFF\n")
 
-        with open(file_path, 'w', encoding='utf-8') as file:
-            for portal in self.portals:
-                if portal in l:
-                    file.write(f"{portal}\tON\n")
-                else:
-                    file.write(f"{portal}\tOFF\n")
-
-        reloadPlugin("power_pin")
+            reloadPlugin("power_pin")
+        except PermissionError:
+            QgsMessageLog.logMessage(f"Cannot save setting without premission to document directory")
 
     
 
@@ -446,6 +473,8 @@ class PowerPin:
                 self.dockwidget = PowerPinDockWidget()
 
                 self.dockwidget.pushButton.clicked.connect(lambda: self.save_congig())
+                self.dockwidget.pushButton_2.clicked.connect(lambda: webbrowser.open_new('https://www.paypal.com/donate/?hosted_button_id=2AFDC9PRMGN3Q'))
+                self.dockwidget.pushButton_3.clicked.connect(lambda: webbrowser.open_new('http://github.com/Rzezimioszek/QGIS-power-pin'))
 
                 self.dockwidget.listWidget.clear()
 
@@ -639,6 +668,22 @@ class PointTool(QgsMapTool):
                 url = f"https://www.bing.com/maps?cp="
                 url = f"{url}{pt1.y()}%7E{pt1.x()}&lvl=19"
                 webbrowser.open_new(url)
+
+            elif p == 'streeteye':
+                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
+
+                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
+                pt1 = xform.transform(point0)
+
+                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
+                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
+        
+                url = f"https://bing.com/maps/default.aspx?cp="
+                url = f"{url}{pt1.y()}~{pt1.x()}&style=x&lvl=19&dir={angle}"
+                webbrowser.open_new(url)
+
+            QgsMessageLog.logMessage(f"{point0.y()}\t{point0.x()}")
+            QgsMessageLog.logMessage(f"{url}")
 
             rl.reset()
             rb.reset()           
