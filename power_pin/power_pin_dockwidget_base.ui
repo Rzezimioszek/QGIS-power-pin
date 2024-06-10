@@ -45,7 +45,7 @@
       <item>
        <widget class="QPushButton" name="pushButton_2">
         <property name="text">
-         <string>Postaw mi kawę :)</string>
+         <string>Donate</string>
         </property>
        </widget>
       </item>
@@ -59,7 +59,7 @@
       <item>
        <widget class="QPushButton" name="pushButton">
         <property name="text">
-         <string>Ustaw i Zapisz</string>
+         <string>Save (Zapisz)</string>
         </property>
        </widget>
       </item>
@@ -68,7 +68,7 @@
     <item row="1" column="0">
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Ikony widoczne na pasku</string>
+       <string>Icons on bar (Ikony widoczne na pasku)</string>
       </property>
      </widget>
     </item>

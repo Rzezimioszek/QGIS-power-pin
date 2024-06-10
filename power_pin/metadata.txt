@@ -7,7 +7,7 @@ name=Power Pin PL
 qgisMinimumVersion=3.28
 description=Plugin eksportuje pinezkę do serwiów typu geoportal. Pin to popular polish and world maps portal. Plugin export pin to popular geoportal like serives
 
-version=0.3
+version=0.4
 author=Łukasz Świątek
 email=lukasz.swiatek1996@gmail.com
 
@@ -22,6 +22,11 @@ repository=http://github.com/Rzezimioszek/QGIS-power-pin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog= 
+	0.4 
+	Adds:
+		* New Google maps url, now with pin in choose coords
+		* Corrected path of config file
+		* Message bar messages
     0.3 
     Dodano: 
         * Bing Streeteye
@@ -32,7 +37,7 @@ changelog=
     0.1 pierwsze wydanie
 
 # Tags are comma separated with spaces allowed
-tags=python, geoportal2, geoportal, google maps, streetview, e-mapa, openstreetmap, osm, geoportal360, polskie serwisy mapowe, pin, power pin, yandex, bing
+tags=python, geoportal2, geoportal, google maps, streetview, e-mapa, openstreetmap, osm, geoportal360, polskie serwisy mapowe, pin, power pin,
 
 homepage=http://github.com/Rzezimioszek
 category=Web

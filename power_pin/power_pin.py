@@ -61,8 +61,18 @@ class PowerPin:
             application at run time.
         :type iface: QgsInterface
         """
+
+        self.upoint = ""
         # Save reference to the QGIS interface
         self.iface = iface
+
+        ###
+        self.canvas = self.iface.mapCanvas()
+        
+        # out click tool will emit a QgsPoint on every click
+        self.clickTool = QgsMapToolEmitPoint(self.canvas)
+        self.clickTool.canvasClicked.connect(self.canvasClicked)
+        ###
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
@@ -192,7 +202,7 @@ class PowerPin:
 
         ons = [True] * 12
 
-        file_path = "power_pin_config.txt"
+        file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
         if os.path.exists(file_path):
             
             temp_ons = ons.copy()
@@ -434,14 +444,42 @@ class PowerPin:
         """self.dockwidget.listWidget.clear()
         self.dockwidget.listWidget.addItem(f"{portal}")"""
 
+        # QgsMessageLog.logMessage("Select loaction on map: First point is pin location, second without click release is direction (for streetview or bingeye)")
+
+        self.iface.messageBar().pushMessage( f"Select loaction for {portal}:", "First point is pin location, second without click release is direction (for streetview or bingeye)", level=Qgis.Success, duration=2)
+
         tool = PointTool(self.iface.mapCanvas(), portal)
         self.iface.mapCanvas().setMapTool(tool)
+
+    def put_pin_cross(self, portal):
+
+        """self.dockwidget.listWidget.clear()
+        self.dockwidget.listWidget.addItem(f"{portal}")"""
+
+        self.iface.messageBar().pushMessage( "Select point", "and copy it to clipboard", level=Qgis.Success, duration=2)
+        self.canvas.setMapTool(self.clickTool)
+
+
+
+    def canvasClicked(self, point):
+        # dodać przyciąganie według obecnych ustawień
+        # self.canvas.unsetMapTool(self.clickTool)
+        # self.portal = portal.strip()
+
+        coords = f"{point.y():.3f}\t{point.x():.3f}"
+        actual_crs = self.canvas.mapSettings().destinationCrs()
+
+        self.canvas.unsetMapTool(self.clickTool)
+        QgsMessageLog.logMessage(str(coords), 'Power Clipboard')
+        self.iface.messageBar().pushMessage("Copied to clipboard:", f"{coords}// {actual_crs}", level=Qgis.Success, duration=2)
+        
+
 
     def save_congig(self):
 
         l =  [item.text() for item in self.dockwidget.listWidget.selectedItems()]
 
-        file_path = "power_pin_config.txt"
+        file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
         try:
             with open(file_path, 'w', encoding='utf-8') as file:
                 for portal in self.portals:
@@ -555,8 +593,12 @@ class PointTool(QgsMapTool):
                 xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
                 pt1 = xform.transform(point0)
 
-                url = f"https://www.google.pl/maps/@"
+                """url = f"https://www.google.pl/maps/@"
                 url = f"{url}{pt1.y()},{pt1.x()},19z"
+                """
+
+                url = f"https://www.google.pl/maps/place/"
+                url = f"{url}{pt1.y()},{pt1.x()}"
                 webbrowser.open_new(url)
 
             elif p == 'streetview':

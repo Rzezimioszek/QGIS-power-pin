@@ -71,9 +71,9 @@ class Ui_PowerPinDockWidgetBase(object):
 
     def retranslateUi(self, PowerPinDockWidgetBase):
         PowerPinDockWidgetBase.setWindowTitle(QCoreApplication.translate("PowerPinDockWidgetBase", u"Power Pin PL", None))
-        self.pushButton_2.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Postaw mi kaw\u0119 :)", None))
+        self.pushButton_2.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Donate", None))
         self.pushButton_3.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"GitHub", None))
-        self.pushButton.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Ustaw i Zapisz", None))
-        self.label.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Ikony widoczne na pasku", None))
+        self.pushButton.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Save (Zapisz)", None))
+        self.label.setText(QCoreApplication.translate("PowerPinDockWidgetBase", u"Icons on bar (Ikony widoczne na pasku)", None))
     # retranslateUi
 

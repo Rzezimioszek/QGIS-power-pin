@@ -1,0 +1,12 @@
+google	ON
+streetview	ON
+earth	OFF
+geoportal	ON
+geoportal2	ON
+g360	OFF
+emapa	ON
+osm	OFF
+ump	OFF
+yandex	OFF
+bing	ON
+streeteye	ON
