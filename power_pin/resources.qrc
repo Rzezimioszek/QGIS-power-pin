@@ -2,6 +2,7 @@
     <qresource prefix="/plugins/power_pin" >
         <file>icon.png</file>
 		<file>icon32.png</file>
+		<file>icons/map32.png</file>
 		<file>icons/_earth.png</file>
         <file>icons/_emapa.png</file>
         <file>icons/_g360.png</file>
@@ -15,5 +16,6 @@
         <file>icons/_yandex.png</file>
         <file>icons/_bing.png</file>
         <file>icons/_streeteye.png</file>
+		<file>icons/_c-geo.png</file>
     </qresource>
 </RCC>

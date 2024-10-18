@@ -196,11 +196,11 @@ class PowerPin:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         #
 
-        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye']
+        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo']
         self.portals = portals
         # ons = [True, True, True, True, True, True, True, True, True, True, True]
 
-        ons = [True] * 12
+        ons = [True] * 13
 
         file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
         if os.path.exists(file_path):
@@ -221,7 +221,7 @@ class PowerPin:
                         else:
                             ons.append(False)
 
-            if len(ons) < 12:
+            if len(ons) < 13:
                 ons = temp_ons.copy()
                 portals = temp_portals.copy()
 
@@ -238,7 +238,7 @@ class PowerPin:
 
         # self.popupMenu = QMenu( self.iface.mainWindow() )
 
-        icon_path = ':/plugins/power_pin/icon32.png'
+        icon_path = ':/plugins/power_pin/icons/map32.png'
         self.main_btn = self.add_action(
             icon_path,
             text=self.tr(u'Power Pin'),
@@ -386,6 +386,17 @@ class PowerPin:
                     text=self.tr(f'{portal.capitalize()}'),
                     #callback=lambda: self.put_pin(portal),
                     callback=lambda: self.put_pin(f"streeteye"),
+                    parent=self.iface.mainWindow() #
+                )
+                
+        if ons[12]:
+            portal = "c-geo"
+            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
+            btn = self.add_action(
+                    icon_path,
+                    text=self.tr(f'{portal.capitalize()}'),
+                    #callback=lambda: self.put_pin(portal),
+                    callback=lambda: self.put_pin(f"c-geo"),
                     parent=self.iface.mainWindow() #
                 )
 
@@ -722,6 +733,27 @@ class PointTool(QgsMapTool):
         
                 url = f"https://bing.com/maps/default.aspx?cp="
                 url = f"{url}{pt1.y()}~{pt1.x()}&style=x&lvl=19&dir={angle}"
+                webbrowser.open_new(url)
+                
+            elif p == 'c-geo':
+
+                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
+
+                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
+                pt1 = xform.transform(point0)
+                
+                
+        
+                url = f"https://www.c-geoportal.pl/map?extent="   
+                
+                pt1.x  = pt1.x() - 100.0
+                pt1.y  = pt1.y() - 100.0
+                url = f"{url}{pt1.x},{pt1.y},"
+                
+                pt1.x  = pt1.x + 200.0
+                pt1.y  = pt1.y + 200.0
+                url = f"{url}{pt1.x},{pt1.y}"
+                    
                 webbrowser.open_new(url)
 
             QgsMessageLog.logMessage(f"{point0.y()}\t{point0.x()}")
