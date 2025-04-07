@@ -196,11 +196,11 @@ class PowerPin:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         #
 
-        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo']
+        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo','apple', 'Alookmap']
         self.portals = portals
         # ons = [True, True, True, True, True, True, True, True, True, True, True]
 
-        ons = [True] * 13
+        ons = [True] * 15
 
         file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
         if os.path.exists(file_path):
@@ -221,7 +221,7 @@ class PowerPin:
                         else:
                             ons.append(False)
 
-            if len(ons) < 13:
+            if len(ons) < 15:
                 ons = temp_ons.copy()
                 portals = temp_portals.copy()
 
@@ -397,6 +397,26 @@ class PowerPin:
                     text=self.tr(f'{portal.capitalize()}'),
                     #callback=lambda: self.put_pin(portal),
                     callback=lambda: self.put_pin(f"c-geo"),
+                    parent=self.iface.mainWindow() #
+                )
+        if ons[13]:
+            portal = "apple"
+            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
+            btn = self.add_action(
+                    icon_path,
+                    text=self.tr(f'{portal.capitalize()}'),
+                    #callback=lambda: self.put_pin(portal),
+                    callback=lambda: self.put_pin(f"apple"),
+                    parent=self.iface.mainWindow() #
+                )
+        if ons[14]:
+            portal = "Alookmap"
+            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
+            btn = self.add_action(
+                    icon_path,
+                    text=self.tr(f'{portal.capitalize()}'),
+                    #callback=lambda: self.put_pin(portal),
+                    callback=lambda: self.put_pin(f"Alookmap"),
                     parent=self.iface.mainWindow() #
                 )
 
@@ -754,6 +774,30 @@ class PointTool(QgsMapTool):
                 pt1.y  = pt1.y + 200.0
                 url = f"{url}{pt1.x},{pt1.y}"
                     
+                webbrowser.open_new(url)
+            elif p == 'apple':
+
+
+                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
+
+                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
+                pt1 = xform.transform(point0)
+
+                url = f"https://beta.maps.apple.com/"
+                url = f"{url}?ll={pt1.y()},{pt1.x()}"
+                webbrowser.open_new(url)
+            elif p == 'Alookmap':
+
+                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
+                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
+
+                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
+
+                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
+                pt1 = xform.transform(point0)
+
+                url = f"https://lookmap.eu.pythonanywhere.com/#c=14/"
+                url = f"{url}{pt1.y()}/{pt1.x()}&p={pt1.y()}/{pt1.x()}&a={angle}/0"
                 webbrowser.open_new(url)
 
             QgsMessageLog.logMessage(f"{point0.y()}\t{point0.x()}")

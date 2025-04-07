@@ -17,5 +17,7 @@
         <file>icons/_bing.png</file>
         <file>icons/_streeteye.png</file>
 		<file>icons/_c-geo.png</file>
+		<file>icons/_apple.png</file>
+		<file>icons/_Alookmap.png</file>
     </qresource>
 </RCC>
