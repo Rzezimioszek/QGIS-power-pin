@@ -200,7 +200,7 @@ class PowerPin:
         self.portals = portals
         # ons = [True, True, True, True, True, True, True, True, True, True, True]
 
-        ons = [True] * 15
+        ons = [True] * 16
 
         file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
         if os.path.exists(file_path):
@@ -221,7 +221,7 @@ class PowerPin:
                         else:
                             ons.append(False)
 
-            if len(ons) < 15:
+            if len(ons) < 16:
                 ons = temp_ons.copy()
                 portals = temp_portals.copy()
 
@@ -417,6 +417,16 @@ class PowerPin:
                     text=self.tr(f'{portal.capitalize()}'),
                     #callback=lambda: self.put_pin(portal),
                     callback=lambda: self.put_pin(f"Alookmap"),
+                    parent=self.iface.mainWindow() #
+                )
+        if ons[15]:
+            portal = "internet.gov"
+            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
+            btn = self.add_action(
+                    icon_path,
+                    text=self.tr(f'{portal.capitalize()}'),
+                    #callback=lambda: self.put_pin(portal),
+                    callback=lambda: self.put_pin(f"internet.gov"),
                     parent=self.iface.mainWindow() #
                 )
 
@@ -798,6 +808,19 @@ class PointTool(QgsMapTool):
 
                 url = f"https://lookmap.eu.pythonanywhere.com/#c=14/"
                 url = f"{url}{pt1.y()}/{pt1.x()}&p={pt1.y()}/{pt1.x()}&a={angle}/0"
+                webbrowser.open_new(url)
+            elif p == 'internet.gov':
+
+                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
+                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
+
+                crsDest = QgsCoordinateReferenceSystem(3857) #WGS84
+
+                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
+                pt1 = xform.transform(point0)
+
+                url = f"https://internet.gov.pl/map/?"
+                url = f"{url}center={pt1.x()};{pt1.y()}&zoom=19"
                 webbrowser.open_new(url)
 
             QgsMessageLog.logMessage(f"{point0.y()}\t{point0.x()}")

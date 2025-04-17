@@ -7,13 +7,13 @@ name=Power Pin PL
 qgisMinimumVersion=3.28
 description=Plugin eksportuje pinezkę do serwiów typu geoportal. Pin to popular polish and world maps portal. Plugin export pin to popular geoportal like serives
 
-version=0.6
+version=0.7
 author=Łukasz Świątek
 email=lukasz.swiatek1996@gmail.com
 
 about= 
 	PL: Wtyczka służy do otwierania portali mapowych w stylu geoportalu po przez wskazanego pinezką miejsca.
-	EN: Plugin to open map web portals like geoportal.gov.pl by putting pin on the map. 
+	EN: The plugin is used to open map portals in the geoportal style by indicating a location with a pin. 
 
 tracker=https://github.com/Rzezimioszek/QGIS-style-exporter/issues
 repository=http://github.com/Rzezimioszek/QGIS-power-pin
@@ -24,6 +24,9 @@ repository=http://github.com/Rzezimioszek/QGIS-power-pin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog= 
+	0.7 
+	Dodano:
+		* dodano portal internet.gov.pl
 	0.6 
 	Dodano:
 		* dodano portal Apple Maps
