@@ -1,8 +1,8 @@
 # QGIS-power-pin
 
-_Pin to popular polish and world maps portal.  Plugin export pin to popular geoportal like serives.
+Pin to popular polish and world maps portal.  Plugin export pin to popular geoportal like serives.
 
-Pinezki do QGISa przenoszące do zewnętrznych serwisów mapowych._
+Pinezki do QGISa przenoszące do zewnętrznych serwisów mapowych.
 
 
 ![powerpin](https://github.com/user-attachments/assets/1041967a-0d95-4848-9b94-f18780258a8c)
@@ -14,3 +14,4 @@ Pinezki do QGISa przenoszące do zewnętrznych serwisów mapowych._
 - [ ] wybór stopnia przybliżenia jeśli to możliwe
 - [ ] zapamiętywanie wyłączonej widoczności updacie portali
 - [ ] except w przypadku błędów ładowania wtyczki
+- [ ] gify wyjaśniające użycie kierunku przy streetview 
