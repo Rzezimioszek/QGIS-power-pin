@@ -11,3 +11,6 @@ yandex	ON
 bing	ON
 streeteye	ON
 c-geo	ON
+apple	ON
+Alookmap	ON
+internet.gov	ON

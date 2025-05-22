@@ -196,7 +196,7 @@ class PowerPin:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         #
 
-        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo','apple', 'Alookmap']
+        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo','apple', 'Alookmap', 'internet.gov']
         self.portals = portals
         # ons = [True, True, True, True, True, True, True, True, True, True, True]
 
