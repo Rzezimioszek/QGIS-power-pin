@@ -20,5 +20,6 @@
 		<file>icons/_apple.png</file>
 		<file>icons/_Alookmap.png</file>
 		<file>icons/_internet.gov.png</file>
+        <file>icons/_geologia.png</file>
     </qresource>
 </RCC>

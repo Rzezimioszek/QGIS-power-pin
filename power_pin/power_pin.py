@@ -196,11 +196,11 @@ class PowerPin:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         #
 
-        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo','apple', 'Alookmap', 'internet.gov']
+        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo','apple', 'Alookmap', 'internet.gov', 'geologia']
         self.portals = portals
         # ons = [True, True, True, True, True, True, True, True, True, True, True]
 
-        ons = [True] * 16
+        ons = [True] * 17
 
         file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
         if os.path.exists(file_path):
@@ -221,7 +221,7 @@ class PowerPin:
                         else:
                             ons.append(False)
 
-            if len(ons) < 16:
+            if len(ons) < 17:
                 ons = temp_ons.copy()
                 portals = temp_portals.copy()
 
@@ -427,6 +427,16 @@ class PowerPin:
                     text=self.tr(f'{portal.capitalize()}'),
                     #callback=lambda: self.put_pin(portal),
                     callback=lambda: self.put_pin(f"internet.gov"),
+                    parent=self.iface.mainWindow() #
+                )
+        if ons[16]:
+            portal = "geologia"
+            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
+            btn = self.add_action(
+                    icon_path,
+                    text=self.tr(f'{portal.capitalize()}'),
+                    #callback=lambda: self.put_pin(portal),
+                    callback=lambda: self.put_pin(f"geologia"),
                     parent=self.iface.mainWindow() #
                 )
 
@@ -708,7 +718,7 @@ class PointTool(QgsMapTool):
                 pt1 = xform.transform(point0)
         
                 url = f"https://polska.e-mapa.net?"
-                url = f"{url}x={pt1.x()}&y={pt1.y()}&zoom=11&group=2,1000255&service=123,124,129,130,133,136,137,145,148,153,154,155,169,171,175,176,177,178,179,182,187,188,193,194,195,196,197,198,201,204,205,206,223,228,229,244,249,251,252,254,260,261,271,273,278,280,282,283,284,285,295,302,318,319,321,322,323,324,330&alllayers=123,126,128,129,130,131,Plany wektorowes133,Plany wektorowes133,Plany wektorowes133,Plany wektorowes133,Plany wektorowes133,134,136,137,139,140,141,143,144,145,147,148,149,150,151,152,153,154,155,156,159,161,162,167,169,170,171,172,176,177,178,182,204,205,206,210,211,213,221,222,223,224,225,226,231,232,233,234,235,236,237,238,239,240,241,242,244,246,248,249,250,252,254,256,257,258,259,261,263,264,265,266,267,268,269,271,274,282,283,284,285,293,295,296,297,298,299,300,302,308,309,311,312,313,314,315,316,318,319,320,321,322,323,324,326,327,328,330,331&layer=124001,124002,124003,127002,127003,127004,127005,127006,127007,127008,127009,1270010,132001,132002,132003,132004,133002,133008,146002,146003,146004,146005,173001,179001,180001,184006,184007,184009,185006,185007,185009,186006,186007,186009,187007,187008,187009,1870010,187021,187022,187023,187024,188007,188008,188009,1880010,188021,188022,188023,188024,189007,189008,189009,1890010,190009,1900010,190011,190012,190013,191005,193002,193005,193007,194001,194004,194006,1940010,196001,196004,196006,1960010,197005,201001,201003,201009,202001,209001,209002,209003,209004,209005,209006,212006,212008,212009,2120010,212011,228002,229003,247004,247005,247006,247037,247038,247039,247040,247041,247042,251004,276016,277002,278002,280001,286002,286003,304001,305001,306001"
+                url = f"{url}x={pt1.x()}&y={pt1.y()}&zoom=11"
                     
                 webbrowser.open_new(url)
 
@@ -822,6 +832,19 @@ class PointTool(QgsMapTool):
                 url = f"https://internet.gov.pl/map/?"
                 url = f"{url}center={pt1.x()};{pt1.y()}&zoom=19"
                 webbrowser.open_new(url)
+
+            elif p == 'geologia':
+                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
+
+                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
+                pt1 = xform.transform(point0)
+        
+                url = f"https://geologia.pgi.gov.pl/wpkg_kartogeo/?"
+                url = f"{url}center={pt1.x()}%2C{pt1.y()}%2C2180&level=11"
+                    
+                webbrowser.open_new(url)
+
+                # https://geologia.pgi.gov.pl/wpkg_kartogeo/?center=524048.8276%2C490788.498%2C2180&level=11
 
             QgsMessageLog.logMessage(f"{point0.y()}\t{point0.x()}")
             QgsMessageLog.logMessage(f"{url}")
