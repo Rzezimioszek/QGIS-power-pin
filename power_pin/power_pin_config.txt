@@ -10,7 +10,7 @@ ump	ON
 yandex	ON
 bing	ON
 streeteye	ON
-c-geo	OFF
-apple	OFF
-Alookmap	OFF
-internet.gov	OFF
+c-geo	ON
+apple	ON
+Alookmap	ON
+internet.gov	ON

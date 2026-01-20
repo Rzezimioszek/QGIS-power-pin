@@ -38,12 +38,32 @@ class PowerPinDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(PowerPinDockWidget, self).__init__(parent)
-        # Set up the user interface from Designer.
-        # After setupUI you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+        # Dynamiczny layout
+        layout = self.dockWidgetContents.layout()
+        if layout is None:
+             layout = QtWidgets.QVBoxLayout(self.dockWidgetContents)
+        
+        # 1. Checkbox dla Dynamic View
+        self.cb_dynamic_view = QtWidgets.QCheckBox("Dynamic View (Zoom/Extent)")
+        self.cb_dynamic_view.setToolTip("If checked, uses current map scale and extent. If unchecked, uses fixed zoom and point buffer.")
+        
+        # 2. Checkbox dla Compact Mode (Split Button)
+        self.cb_compact_mode = QtWidgets.QCheckBox("Compact Mode (Split Button)")
+        self.cb_compact_mode.setToolTip("If checked, shows only one button with the last used portal. Others are in a dropdown.")
+
+        # Dodawanie do layoutu (bezpiecznie dla Grid i innych)
+        if hasattr(layout, 'insertWidget'):
+             layout.insertWidget(0, self.cb_compact_mode)
+             layout.insertWidget(1, self.cb_dynamic_view)
+        elif hasattr(layout, 'addWidget'):
+             if isinstance(layout, QtWidgets.QGridLayout):
+                 layout.addWidget(self.cb_compact_mode, layout.rowCount(), 0, 1, layout.columnCount())
+                 layout.addWidget(self.cb_dynamic_view, layout.rowCount(), 0, 1, layout.columnCount())
+             else:
+                 layout.addWidget(self.cb_compact_mode)
+                 layout.addWidget(self.cb_dynamic_view)
 
     def closeEvent(self, event):
         self.closingPlugin.emit()

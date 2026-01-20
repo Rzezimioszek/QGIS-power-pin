@@ -10,75 +10,56 @@
         git sha              : $Format:%H$
         copyright            : (C) 2024 by Łukasz Świątek
         email                : lukasz.swiatek1996@gmail.com
- ***************************************************************************/
+ ***************************************************************************/ 
 
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+ *                                                                         * 
+ *   This program is free software; you can redistribute it and/or modify  * 
+ *   it under the terms of the GNU General Public License as published by  * 
+ *   the Free Software Foundation; either version 2 of the License, or     * 
+ *   (at your option) any later version.                                   * 
+ *                                                                         * 
+ ***************************************************************************/ 
 """
-# from PyQt5 import Qt, QtCore, QtWidgets, QtGui, QtWebKit, QtWebKitWidgets, QtXml, QtNetwork, uic
-from qgis.PyQt.QtCore import *
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSize
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtWidgets import QAction, QApplication, QAbstractItemView, QToolButton, QMenu
 
-from qgis.gui import *
-from qgis.utils import *
-from qgis.core import *
+from qgis.gui import QgsMapTool, QgsMapToolEmitPoint, QgsRubberBand
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsWkbTypes, QgsMessageLog, Qgis, QgsSettings, QgsRectangle
 
-from qgis.gui import QgsRubberBand
-# Initialize Qt resources from file resources.py
 from .resources import *
-
-# Import the code for the DockWidget
 from .power_pin_dockwidget import PowerPinDockWidget
-import os.path
 
 import math
-import webbrowser  
-import subprocess
-
-rb=QgsRubberBand(iface.mapCanvas(),QgsWkbTypes.PointGeometry )
-rl=QgsRubberBand(iface.mapCanvas(),QgsWkbTypes.LineGeometry )
-premuto= False
-linea=False
-point0=iface.mapCanvas().getCoordinateTransform().toMapCoordinates(0, 0)
-point1=iface.mapCanvas().getCoordinateTransform().toMapCoordinates(0, 0)
-
+import os.path
+import webbrowser
+import json
 
 class PowerPin:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
-        """Constructor.
-
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
-        """
-
-        self.upoint = ""
-        # Save reference to the QGIS interface
+        """Constructor."""
         self.iface = iface
-
-        ###
         self.canvas = self.iface.mapCanvas()
-        
-        # out click tool will emit a QgsPoint on every click
-        self.clickTool = QgsMapToolEmitPoint(self.canvas)
-        self.clickTool.canvasClicked.connect(self.canvasClicked)
-        ###
-
-        # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-
-        # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
+        self.actions = []
+        self.menu = self.tr(u'&Power Pin PL')
+        self.toolbar = self.iface.addToolBar(u'PowerPin')
+        self.toolbar.setObjectName(u'PowerPin')
+        self.pluginIsActive = False
+        self.dockwidget = None
+        self.portals = []
+        self.split_button = None 
+        self.split_button_action = None
+        
+        # Load portals from JSON
+        self.load_portals()
+        
+        # Initialize locale
+        locale = QgsSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
@@ -88,86 +69,30 @@ class PowerPin:
             self.translator = QTranslator()
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
+            
+        self.clickTool = QgsMapToolEmitPoint(self.canvas)
+        self.clickTool.canvasClicked.connect(self.canvasClicked)
 
-        # Declare instance attributes
-        self.actions = []
-        self.menu = self.tr(u'&Power Pin PL')
-        # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'PowerPin')
-        self.toolbar.setObjectName(u'PowerPin')
+    def load_portals(self):
+        """Load portals configuration from JSON file."""
+        json_path = os.path.join(self.plugin_dir, 'portals.json')
+        try:
+            if os.path.exists(json_path):
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    self.portals = json.load(f)
+            else:
+                QgsMessageLog.logMessage(f"Portals config not found: {json_path}", "PowerPin", Qgis.Warning)
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Error loading portals: {e}", "PowerPin", Qgis.Critical)
 
-        #print "** INITIALIZING PowerPin"
-
-        self.pluginIsActive = False
-        self.dockwidget = None
-
-
-    # noinspection PyMethodMayBeStatic
     def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        """Get the translation for a string using Qt translation API."""
         return QCoreApplication.translate('PowerPin', message)
 
-
-    def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
-        """Add a toolbar icon to the toolbar.
-
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
-
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
-        """
-
+    def add_action(self, icon_path, text, callback, enabled_flag=True, 
+                   add_to_menu=True, add_to_toolbar=True, 
+                   status_tip=None, whats_this=None, parent=None):
+        """Add a toolbar icon to the toolbar."""
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -175,694 +100,389 @@ class PowerPin:
 
         if status_tip is not None:
             action.setStatusTip(status_tip)
-
         if whats_this is not None:
             action.setWhatsThis(whats_this)
 
         if add_to_toolbar:
             self.toolbar.addAction(action)
-
         if add_to_menu:
-            self.iface.addPluginToWebMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToWebMenu(self.menu, action)
 
         self.actions.append(action)
-
         return action
 
+    def refresh_gui(self):
+        """Refreshes the GUI (Toolbar and Menu) without restarting."""
+        for action in self.actions:
+            self.iface.removePluginWebMenu(self.tr(u'&Power Pin PL'), action)
+            self.toolbar.removeAction(action)
+        
+        # 2. Remove split button if exists
+        if self.split_button_action:
+            self.toolbar.removeAction(self.split_button_action)
+            self.split_button_action = None
+            if self.split_button:
+                self.split_button.deleteLater()
+                self.split_button = None
+            
+        self.actions = []
+        
+        # 3. Re-initialize GUI
+        self.initGui()
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-        #
-
-        portals = ['google', 'streetview', 'earth', 'geoportal', 'geoportal2', 'g360', 'emapa', 'osm', 'ump', 'yandex', 'bing', 'streeteye', 'c-geo','apple', 'Alookmap', 'internet.gov', 'geologia']
-        self.portals = portals
-        # ons = [True, True, True, True, True, True, True, True, True, True, True]
-
-        ons = [True] * 17
-
-        file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
-        if os.path.exists(file_path):
-            
-            temp_ons = ons.copy()
-            temp_portals = portals.copy()
-            portals = []
-            ons = []
-            with open(file_path, 'r', encoding='utf-8') as file:
-                lines = file.read().split("\n")
-                for line in lines:
-                    line = line.split("\t")
-
-                    if len(line) > 1:
-                        if line[1] == "ON":
-                            portals.append(line[0])
-                            ons.append(True)
-                        else:
-                            ons.append(False)
-
-            if len(ons) < 17:
-                ons = temp_ons.copy()
-                portals = temp_portals.copy()
-
-
-        else:
-            try:
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    for portal in portals:
-                        file.write(f"{portal}\tON\n")
-                QgsMessageLog.logMessage(f"Default setting loaded succesful")
-            except PermissionError:
-                QgsMessageLog.logMessage(f"Load without widget settings")
-
-
-        # self.popupMenu = QMenu( self.iface.mainWindow() )
-
+        
+        # Main button (always present)
         icon_path = ':/plugins/power_pin/icons/map32.png'
         self.main_btn = self.add_action(
             icon_path,
-            text=self.tr(u'Power Pin'),
+            text=self.tr(u'Power Pin Settings'),
             callback=self.run,
-            parent=self.iface.mainWindow()) #
-        #self.popupMenu.addAction(self.main_btn)
+            parent=self.iface.mainWindow()
+        )
+        
+        settings = QgsSettings()
+        # Default to True for compact mode
+        compact_mode = settings.value("PowerPin/compact_mode", True, type=bool)
+        
+        if compact_mode:
+            self.setup_compact_gui(settings)
+        else:
+            self.setup_expanded_gui(settings)
 
-        """
+    def setup_expanded_gui(self, settings):
+        """Sets up the classic multi-button interface."""
+        settings.beginGroup("PowerPin/portals")
+        
+        # Legacy config support (optional check)
+        legacy_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
+        if os.path.exists(legacy_path) and not settings.allKeys():
+            try:
+                with open(legacy_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        parts = line.strip().split("\t")
+                        if len(parts) > 1:
+                            settings.setValue(parts[0], parts[1] == "ON")
+            except Exception as e:
+                pass
 
-        for portal in portals:
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"{portal}"),
-                    parent=self.iface.mainWindow() #
-                )
-        """
-
-        if ons[0]:
-            portal = "google"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"google"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[1]:
-            portal = "streetview"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"streetview"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[2]:
-            portal = "earth"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"earth"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[3]:
-            portal = "geoportal"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"geoportal"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[4]:
-            portal = "geoportal2"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"geoportal2"),
-                    parent=self.iface.mainWindow() #
-                )
-
-        if ons[5]:
-            portal = "g360"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"g360"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[6]:
-            portal = "emapa"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"emapa"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[7]:
-            portal = "osm"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"osm"),
-                    parent=self.iface.mainWindow() #
-                )
-        
-        if ons[8]:
-            portal = "ump"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"ump"),
-                    parent=self.iface.mainWindow() #
-                )
+        for portal in self.portals:
+            p_id = portal.get('id')
+            p_name = portal.get('name', p_id.capitalize())
             
-        if ons[9]:
-            portal = "yandex"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
+            is_on = settings.value(p_id, True, type=bool)
+            if is_on:
+                icon_path = f':/plugins/power_pin/icons/_{p_id}.png'
+                self.add_action(
                     icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"yandex"),
-                    parent=self.iface.mainWindow() #
+                    text=self.tr(p_name),
+                    callback=lambda checked, p=portal: self.put_pin(p),
+                    parent=self.iface.mainWindow()
                 )
-        if ons[10]:
-            portal = "bing"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"bing"),
-                    parent=self.iface.mainWindow() #
-                )
-        if ons[11]:
-            portal = "streeteye"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"streeteye"),
-                    parent=self.iface.mainWindow() #
-                )
-                
-        if ons[12]:
-            portal = "c-geo"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"c-geo"),
-                    parent=self.iface.mainWindow() #
-                )
-        if ons[13]:
-            portal = "apple"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"apple"),
-                    parent=self.iface.mainWindow() #
-                )
-        if ons[14]:
-            portal = "Alookmap"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"Alookmap"),
-                    parent=self.iface.mainWindow() #
-                )
-        if ons[15]:
-            portal = "internet.gov"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"internet.gov"),
-                    parent=self.iface.mainWindow() #
-                )
-        if ons[16]:
-            portal = "geologia"
-            icon_path = f':/plugins/power_pin/icons/_{portal}.png'
-            btn = self.add_action(
-                    icon_path,
-                    text=self.tr(f'{portal.capitalize()}'),
-                    #callback=lambda: self.put_pin(portal),
-                    callback=lambda: self.put_pin(f"geologia"),
-                    parent=self.iface.mainWindow() #
-                )
+        settings.endGroup()
 
+    def setup_compact_gui(self, settings):
+        """Sets up the single split-button interface."""
+        self.split_button = QToolButton()
+        self.split_button.setPopupMode(QToolButton.MenuButtonPopup)
+        # self.split_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon) # Optional
         
+        menu = QMenu(self.split_button)
+        
+        settings.beginGroup("PowerPin/portals")
+        last_used_id = QgsSettings().value("PowerPin/last_used_portal", "google", type=str)
+        default_action = None
+        first_action = None
+        
+        for portal in self.portals:
+            p_id = portal.get('id')
+            p_name = portal.get('name', p_id.capitalize())
+            
+            is_on = settings.value(p_id, True, type=bool)
+            if is_on:
+                icon_path = f':/plugins/power_pin/icons/_{p_id}.png'
+                icon = QIcon(icon_path)
+                
+                # Create raw QAction
+                action = QAction(icon, self.tr(p_name), self.iface.mainWindow())
+                
+                # Connect: 1. Put Pin, 2. Update Button
+                # Note: We use a helper function to bind variables correctly
+                action.triggered.connect(lambda checked, p=portal, a=action: self.activate_portal(p, a))
+                
+                menu.addAction(action)
+                
+                if first_action is None:
+                    first_action = action
+                
+                if p_id == last_used_id:
+                    default_action = action
 
-        """
-        self.toolButton = QToolButton()
-        self.toolButton.setMenu( self.popupMenu )
-        self.toolButton.setDefaultAction(self.main_btn)
-        self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
-        self.toolbar.addWidget(self.toolButton)
-        """
+        settings.endGroup()
 
-        self.ons = ons
- 
+        # Fallback if last used is hidden or invalid
+        if default_action is None:
+            default_action = first_action
 
+        if default_action:
+            self.split_button.setDefaultAction(default_action)
+        
+        self.split_button.setMenu(menu)
+        
+        # Add to toolbar and store the ACTION, not just the widget
+        self.split_button_action = self.toolbar.addWidget(self.split_button)
 
-    #--------------------------------------------------------------------------
-
-
+    def activate_portal(self, portal_config, action):
+        """Handles portal activation in Compact Mode."""
+        # 1. Execute logic
+        self.put_pin(portal_config)
+        
+        # 2. Update split button (icon and default action)
+        if self.split_button:
+            self.split_button.setDefaultAction(action)
+            
+        # 3. Save as last used
+        QgsSettings().setValue("PowerPin/last_used_portal", portal_config['id'])
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
-
-        #print "** CLOSING PowerPin"
-
-        # disconnects
-        self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
-
-        # remove this statement if dockwidget is to remain
-        # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
+        if self.dockwidget:
+            self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
         self.pluginIsActive = False
-
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-
-        #print "** UNLOAD PowerPin"
-
         for action in self.actions:
-            self.iface.removePluginWebMenu(
-                self.tr(u'&Power Pin PL'),
-                action)
-            self.iface.removeToolBarIcon(action)
-        # remove the toolbar
+            self.iface.removePluginWebMenu(self.tr(u'&Power Pin PL'), action)
+            self.toolbar.removeAction(action)
+        
+        # Correctly remove the split button action
+        if self.split_button_action:
+            self.toolbar.removeAction(self.split_button_action)
+            self.split_button_action = None
+            
         del self.toolbar
 
-    #--------------------------------------------------------------------------
-
-    def put_pin(self, portal):
-
-        """self.dockwidget.listWidget.clear()
-        self.dockwidget.listWidget.addItem(f"{portal}")"""
-
-        # QgsMessageLog.logMessage("Select loaction on map: First point is pin location, second without click release is direction (for streetview or bingeye)")
-
-        self.iface.messageBar().pushMessage( f"Select loaction for {portal}:", "First point is pin location, second without click release is direction (for streetview or bingeye)", level=Qgis.Success, duration=2)
-
-        tool = PointTool(self.iface.mapCanvas(), portal)
+    def put_pin(self, portal_config):
+        p_name = portal_config.get('name', portal_config.get('id'))
+        
+        msg = "First point is pin location"
+        if portal_config.get('requires_angle', False):
+            msg += ", second (drag or click again) is direction"
+            
+        self.iface.messageBar().pushMessage(
+            f"Select location for {p_name}:", 
+            msg, 
+            level=Qgis.Success, 
+            duration=3
+        )
+        
+        # Load dynamic mode setting (Default is now TRUE)
+        dynamic_mode = QgsSettings().value("PowerPin/dynamic_view", True, type=bool)
+        
+        tool = PointTool(self.iface.mapCanvas(), portal_config, dynamic_mode)
         self.iface.mapCanvas().setMapTool(tool)
 
-    def put_pin_cross(self, portal):
-
-        """self.dockwidget.listWidget.clear()
-        self.dockwidget.listWidget.addItem(f"{portal}")"""
-
-        self.iface.messageBar().pushMessage( "Select point", "and copy it to clipboard", level=Qgis.Success, duration=2)
-        self.canvas.setMapTool(self.clickTool)
-
-
-
     def canvasClicked(self, point):
-        # dodać przyciąganie według obecnych ustawień
-        # self.canvas.unsetMapTool(self.clickTool)
-        # self.portal = portal.strip()
-
         coords = f"{point.y():.3f}\t{point.x():.3f}"
-        actual_crs = self.canvas.mapSettings().destinationCrs()
-
+        actual_crs = self.canvas.mapSettings().destinationCrs().authid()
         self.canvas.unsetMapTool(self.clickTool)
         QgsMessageLog.logMessage(str(coords), 'Power Clipboard')
-        self.iface.messageBar().pushMessage("Copied to clipboard:", f"{coords}// {actual_crs}", level=Qgis.Success, duration=2)
         
+        clipboard = QApplication.clipboard()
+        clipboard.setText(coords)
+        
+        self.iface.messageBar().pushMessage(
+            "Copied to clipboard:", 
+            f"{coords} // {actual_crs}", 
+            level=Qgis.Success, 
+            duration=2
+        )
 
+    def save_config(self):
+        if not self.dockwidget:
+            return
+            
+        settings = QgsSettings()
+        
+        # Save dynamic view setting
+        settings.setValue("PowerPin/dynamic_view", self.dockwidget.cb_dynamic_view.isChecked())
+        # Save compact mode setting
+        settings.setValue("PowerPin/compact_mode", self.dockwidget.cb_compact_mode.isChecked())
 
-    def save_congig(self):
+        settings.beginGroup("PowerPin/portals")
+        
+        # Get selected items (MultiSelection)
+        # First set all to False
+        for portal in self.portals:
+             settings.setValue(portal['id'], False)
 
-        l =  [item.text() for item in self.dockwidget.listWidget.selectedItems()]
-
-        file_path = os.path.join(self.plugin_dir, "power_pin_config.txt")
-        try:
-            with open(file_path, 'w', encoding='utf-8') as file:
-                for portal in self.portals:
-                    if portal in l:
-                        file.write(f"{portal}\tON\n")
-                    else:
-                        file.write(f"{portal}\tOFF\n")
-
-            reloadPlugin("power_pin")
-        except PermissionError:
-            QgsMessageLog.logMessage(f"Cannot save setting without premission to document directory")
-
-    
+        # Then set selected to True
+        for item in self.dockwidget.listWidget.selectedItems():
+            settings.setValue(item.data(Qt.UserRole), True)
+            
+        settings.endGroup()
+        
+        self.iface.messageBar().pushMessage(
+            "Configuration Saved", 
+            "GUI Refreshed.", 
+            level=Qgis.Info, 
+            duration=3
+        )
+        
+        # Refresh GUI immediately
+        self.refresh_gui()
 
     def run(self):
         """Run method that loads and starts the plugin"""
-
         if not self.pluginIsActive:
             self.pluginIsActive = True
-
-
-                #print "** STARTING PowerPin"
-
-                # dockwidget may not exist if:
-                #    first run of plugin
-                #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
-                    # Create the dockwidget (after translation) and keep reference
+            if self.dockwidget is None:
                 self.dockwidget = PowerPinDockWidget()
-
-                self.dockwidget.pushButton.clicked.connect(lambda: self.save_congig())
-                self.dockwidget.pushButton_2.clicked.connect(lambda: webbrowser.open_new('https://www.paypal.com/donate/?hosted_button_id=2AFDC9PRMGN3Q'))
+                self.dockwidget.pushButton.clicked.connect(self.save_config)
+                # self.dockwidget.pushButton_2.clicked.connect(lambda: webbrowser.open_new('https://www.paypal.com/donate/?hosted_button_id=2AFDC9PRMGN3Q'))
                 self.dockwidget.pushButton_3.clicked.connect(lambda: webbrowser.open_new('http://github.com/Rzezimioszek/QGIS-power-pin'))
+                self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
-                self.dockwidget.listWidget.clear()
-
-                portals = self.portals
-                i = 0
-                for portal in portals:
-                    self.dockwidget.listWidget.addItem(f"{portal}")
+            self.dockwidget.listWidget.clear()
+            settings = QgsSettings()
             
-                    item = self.dockwidget.listWidget.item(i)
-                    item.setSelected(self.ons[i])
-                    i += 1
+            # Load dynamic setting (Default True)
+            dynamic_mode = settings.value("PowerPin/dynamic_view", True, type=bool)
+            self.dockwidget.cb_dynamic_view.setChecked(dynamic_mode)
 
-
-
+            # Load compact mode setting (Default True)
+            compact_mode = settings.value("PowerPin/compact_mode", True, type=bool)
+            self.dockwidget.cb_compact_mode.setChecked(compact_mode)
             
-
-
-                # connect to provide cleanup on closing of dockwidget
-            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
-                # show the dockwidget
+            settings.beginGroup("PowerPin/portals")
+            
+            self.dockwidget.listWidget.setSelectionMode(QAbstractItemView.MultiSelection)
+            
+            for portal in self.portals:
+                p_id = portal.get('id')
+                p_name = portal.get('name', p_id)
+                
+                item = QtWidgets.QListWidgetItem(p_name)
+                item.setData(Qt.UserRole, p_id)
+                self.dockwidget.listWidget.addItem(item)
+                
+                is_on = settings.value(p_id, True, type=bool)
+                item.setSelected(is_on)
+            
+            settings.endGroup()
+            
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
-class PointTool(QgsMapTool):  
 
+class PointTool(QgsMapTool):
+    def __init__(self, canvas, portal_config, dynamic_mode=True):
+        QgsMapTool.__init__(self, canvas)
+        self.canvas = canvas
+        self.portal_config = portal_config
+        self.dynamic_mode = dynamic_mode
+        self.pressed = False
+        self.has_line = False
+        self.rb = QgsRubberBand(canvas, QgsWkbTypes.PointGeometry)
+        self.rb.setColor(Qt.red)
+        self.rl = QgsRubberBand(canvas, QgsWkbTypes.LineGeometry)
+        self.rl.setColor(Qt.red)
+        self.point0 = None
+        self.point1 = None
+
+    def canvasPressEvent(self, event):
+        if not self.pressed:
+            self.pressed = True
+            self.point0 = self.toMapCoordinates(event.pos())
+            self.rb.addPoint(self.point0)
+
+    def canvasMoveEvent(self, event):
+        if self.pressed:
+            self.point1 = self.toMapCoordinates(event.pos())
+            self.rl.reset(QgsWkbTypes.LineGeometry)
+            self.rl.addPoint(self.point0)
+            self.rl.addPoint(self.point1)
+            self.has_line = True
+
+    def canvasReleaseEvent(self, event):
+        self.pressed = False
+        self.has_line = False
         
-        def __init__(self, canvas, portal):
+        if not self.point0:
+            return
+
+        if not self.point1:
+            self.point1 = self.point0
+
+        self.open_url()
         
-            QgsMapTool.__init__(self, canvas)
-            self.canvas = canvas    
-            self.portal = portal.strip()
+        self.rb.reset()
+        self.rl.reset()
+        self.canvas.unsetMapTool(self)
 
-        def canvasPressEvent(self, event):
-            x = event.pos().x()
-            y = event.pos().y()
-            global rb ,premuto ,point0
-            if not premuto: 
-              premuto=True
-              rb=QgsRubberBand(iface.mapCanvas(),QgsWkbTypes.PointGeometry )
-              rb.setColor ( QtCore.Qt.red )
-              point0 = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-              rb.addPoint(point0)  
-  
-        def canvasMoveEvent(self, event):
-              x = event.pos().x()
-              y = event.pos().y()        
-              global premuto,point0,point1,linea,rl
-              if premuto:
-               if not linea:              
-                rl.setColor ( QtCore.Qt.red )
-                point1 = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-                rl.addPoint(point0)  
-                rl.addPoint(point1)
-                linea=True
-               else:
-                if linea: 
-                  point1 = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-                  rl.reset(QgsWkbTypes.LineGeometry)
-                  rl.addPoint(point0)  
-                  rl.addPoint(point1)
-                  
-                  
-      
-        def canvasReleaseEvent(self, event):
-            global premuto,linea,rb,rl,point1,point0
+    def _get_transform(self, target_crs_authid):
+        source_crs = self.canvas.mapSettings().destinationCrs()
+        dest_crs = QgsCoordinateReferenceSystem(target_crs_authid)
+        return QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance())
 
-            premuto=False
-            linea=False
-            actual_crs = self.canvas.mapSettings().destinationCrs()
+    def _get_angle(self):
+        angle = math.atan2(self.point1.x() - self.point0.x(), self.point1.y() - self.point0.y())
+        return math.degrees(angle) if angle > 0 else (math.degrees(angle) + 180) + 180
 
-            p = str(self.portal)
+    def _calculate_zoom(self):
+        scale = self.canvas.scale()
+        if scale <= 0: return 18
+        zoom = math.log2(591657550.5 / scale)
+        return int(max(0, min(21, zoom)))
 
-            if p == 'google':
-
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                """url = f"https://www.google.pl/maps/@"
-                url = f"{url}{pt1.y()},{pt1.x()},19z"
-                """
-
-                url = f"https://www.google.pl/maps/place/"
-                url = f"{url}{pt1.y()},{pt1.x()}"
-                webbrowser.open_new(url)
-
-            elif p == 'streetview':
-
-                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
-                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
-
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                url = f"https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="
-                url = f"{url}{pt1.y()},{pt1.x()}&heading={angle}&pitch=10&fov=250"
-                webbrowser.open_new(url)
-
-            elif p == 'earth':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                url = f"https://earth.google.com/web/@"
-                url = f"{url}{pt1.y()},{pt1.x()},110a,300d,90y,0h,0t,0r/data=OgMKATA"
-                webbrowser.open_new(url)
-
-            elif p == 'geoportal':
-
-                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
+    def open_url(self):
+        target_crs_authid = self.portal_config.get('crs', 'EPSG:4326')
+        url_template = self.portal_config.get('url')
         
-                url = f"https://mapy.geoportal.gov.pl/?bbox="   
-                url = f"{url}{pt1.x()},{pt1.y()},{pt1.x()},{pt1.y()}&variant=KATASTER"
-                    
-                webbrowser.open_new(url)
+        if not url_template:
+            return
 
-            elif p == 'geoportal2':
+        transform = self._get_transform(target_crs_authid)
+        pt = transform.transform(self.point0)
+        angle = self._get_angle()
 
-                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
+        zoom = 19
         
-                url = f"https://polska.geoportal2.pl/map/www/mapa.php?CFGF=wms&mylayers=%20OSM%20wmts1:ORTOFOTOMAPA@EPSG:2180%20g1:dzialki%20g1:numery_dzialek%20g1:budynki&bbox="   
-                url = f"{url}{pt1.x()},{pt1.y()},{pt1.x()},{pt1.y()}&markery=0,{pt1.x()},{pt1.y()}"
-                    
-                webbrowser.open_new(url)
+        if self.dynamic_mode:
+            zoom = self._calculate_zoom()
             
-            elif p == 'g360':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
+            canvas_extent = self.canvas.extent()
+            transformed_extent = transform.transformBoundingBox(canvas_extent)
+            
+            xmin = transformed_extent.xMinimum()
+            ymin = transformed_extent.yMinimum()
+            xmax = transformed_extent.xMaximum()
+            ymax = transformed_extent.yMaximum()
+            
+        else:
+            xmin = pt.x() - 100
+            ymin = pt.y() - 100
+            xmax = pt.x() + 100
+            ymax = pt.y() + 100
 
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
+        params = {
+            'x': pt.x(),
+            'y': pt.y(),
+            'angle': angle,
+            'zoom': zoom,
+            'lat': pt.y(),
+            'lon': pt.x(),
+            'xmin': xmin,
+            'ymin': ymin,
+            'xmax': xmax,
+            'ymax': ymax
+        }
         
-                url = f"https://geoportal360.pl/map/#l:"
-                url = f"{url}{pt1.y()},{pt1.x()},19"
-                    
-                webbrowser.open_new(url)
-
-            elif p == 'emapa':
-                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-        
-                url = f"https://polska.e-mapa.net?"
-                url = f"{url}x={pt1.x()}&y={pt1.y()}&zoom=11"
-                    
-                webbrowser.open_new(url)
-
-            elif p == 'osm':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-        
-                url = f"https://www.openstreetmap.org/?m"
-                url = f"{url}lat={pt1.y()}&mlon={pt1.x()}#map=19/{pt1.y()}/{pt1.x()}"
-                webbrowser.open_new(url)
-
-            elif p == 'ump':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-        
-                url = f"https://mapa.ump.waw.pl/ump-www/?zoom=19"
-                url = f"{url}&lat={pt1.y()}&lon={pt1.x()}"
-                webbrowser.open_new(url)
-
-            elif p == 'yandex':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-        
-                url = f"https://yandex.eu/maps/?ll="
-                url = f"{url}{pt1.x()}%2C{pt1.y()}&z=19"
-                webbrowser.open_new(url)
-
-            elif p == 'bing':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-        
-                url = f"https://www.bing.com/maps?cp="
-                url = f"{url}{pt1.y()}%7E{pt1.x()}&lvl=19"
-                webbrowser.open_new(url)
-
-            elif p == 'streeteye':
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
-                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
-        
-                url = f"https://bing.com/maps/default.aspx?cp="
-                url = f"{url}{pt1.y()}~{pt1.x()}&style=x&lvl=19&dir={angle}"
-                webbrowser.open_new(url)
-                
-            elif p == 'c-geo':
-
-                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-                
-                
-        
-                url = f"https://www.c-geoportal.pl/map?extent="   
-                
-                pt1.x  = pt1.x() - 100.0
-                pt1.y  = pt1.y() - 100.0
-                url = f"{url}{pt1.x},{pt1.y},"
-                
-                pt1.x  = pt1.x + 200.0
-                pt1.y  = pt1.y + 200.0
-                url = f"{url}{pt1.x},{pt1.y}"
-                    
-                webbrowser.open_new(url)
-            elif p == 'apple':
-
-
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                url = f"https://beta.maps.apple.com/"
-                url = f"{url}?ll={pt1.y()},{pt1.x()}"
-                webbrowser.open_new(url)
-            elif p == 'Alookmap':
-
-                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
-                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
-
-                crsDest = QgsCoordinateReferenceSystem(4326) # WGS 84 / UTM zone 33N
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                url = f"https://lookmap.eu.pythonanywhere.com/#c=14/"
-                url = f"{url}{pt1.y()}/{pt1.x()}&p={pt1.y()}/{pt1.x()}&a={angle}/0"
-                webbrowser.open_new(url)
-            elif p == 'internet.gov':
-
-                angle = math.atan2(point1.x() - point0.x(), point1.y() - point0.y())
-                angle = math.degrees(angle)if angle>0 else (math.degrees(angle) + 180)+180
-
-                crsDest = QgsCoordinateReferenceSystem(3857) #WGS84
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-
-                url = f"https://internet.gov.pl/map/?"
-                url = f"{url}center={pt1.x()};{pt1.y()}&zoom=19"
-                webbrowser.open_new(url)
-
-            elif p == 'geologia':
-                crsDest = QgsCoordinateReferenceSystem(2180)  # 92
-
-                xform = QgsCoordinateTransform(actual_crs, crsDest,QgsProject.instance())
-                pt1 = xform.transform(point0)
-        
-                url = f"https://geologia.pgi.gov.pl/wpkg_kartogeo/?"
-                url = f"{url}center={pt1.x()}%2C{pt1.y()}%2C2180&level=11"
-                    
-                webbrowser.open_new(url)
-
-                # https://geologia.pgi.gov.pl/wpkg_kartogeo/?center=524048.8276%2C490788.498%2C2180&level=11
-
-            QgsMessageLog.logMessage(f"{point0.y()}\t{point0.x()}")
-            QgsMessageLog.logMessage(f"{url}")
-
-            rl.reset()
-            rb.reset()           
-            self.canvas.unsetMapTool(self)           
-        def activate(self):
-            pass
-    
-        def deactivate(self):
-            pass
-           
-        def isZoomTool(self):
-            return False
-    
-        def isTransient(self):
-            return False
-    
-        def isEditTool(self):
-            return True    
+        try:
+            url = url_template.format(**params)
+            QgsMessageLog.logMessage(f"Opening URL: {url}", "PowerPin")
+            webbrowser.open_new(url)
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Error formatting URL for {self.portal_config.get('id')}: {e}", "PowerPin", Qgis.Warning)

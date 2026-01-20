@@ -1,0 +1,109 @@
+[
+    {
+        "id": "google",
+        "name": "Google",
+        "crs": "EPSG:4326",
+        "url": "https://www.google.pl/maps/place/{y},{x}/@{y},{x},{zoom}z"
+    },
+    {
+        "id": "streetview",
+        "name": "StreetView",
+        "crs": "EPSG:4326",
+        "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint={y},{x}&heading={angle}&pitch=10&fov=250",
+        "requires_angle": true
+    },
+    {
+        "id": "earth",
+        "name": "Earth",
+        "crs": "EPSG:4326",
+        "url": "https://earth.google.com/web/@{y},{x},110a,300d,90y,0h,0t,0r/data=OgMKATA"
+    },
+    {
+        "id": "geoportal",
+        "name": "Geoportal",
+        "crs": "EPSG:2180",
+        "url": "https://mapy.geoportal.gov.pl/?bbox={xmin},{ymin},{xmax},{ymax}&variant=KATASTER"
+    },
+    {
+        "id": "geoportal2",
+        "name": "Geoportal2",
+        "crs": "EPSG:2180",
+        "url": "https://polska.geoportal2.pl/map/www/mapa.php?CFGF=wms&mylayers=%20OSM%20wmts1:ORTOFOTOMAPA@EPSG:2180%20g1:dzialki%20g1:numery_dzialek%20g1:budynki&bbox={xmin},{ymin},{xmax},{ymax}&markery=0,{x},{y}"
+    },
+    {
+        "id": "g360",
+        "name": "G360",
+        "crs": "EPSG:4326",
+        "url": "https://geoportal360.pl/map/#l:{y},{x},{zoom}"
+    },
+    {
+        "id": "emapa",
+        "name": "Emapa",
+        "crs": "EPSG:2180",
+        "url": "https://polska.e-mapa.net?x={x}&y={y}&zoom={zoom}"
+    },
+    {
+        "id": "osm",
+        "name": "OSM",
+        "crs": "EPSG:4326",
+        "url": "https://www.openstreetmap.org/?mlat={y}&mlon={x}#map={zoom}/{y}/{x}"
+    },
+    {
+        "id": "ump",
+        "name": "UMP",
+        "crs": "EPSG:4326",
+        "url": "https://mapa.ump.waw.pl/ump-www/?zoom={zoom}&lat={y}&lon={x}"
+    },
+    {
+        "id": "yandex",
+        "name": "Yandex",
+        "crs": "EPSG:4326",
+        "url": "https://yandex.eu/maps/?ll={x}%2C{y}&z={zoom}"
+    },
+    {
+        "id": "bing",
+        "name": "Bing",
+        "crs": "EPSG:4326",
+        "url": "https://www.bing.com/maps?cp={y}%7E{x}&lvl={zoom}"
+    },
+    {
+        "id": "streeteye",
+        "name": "StreetEye",
+        "crs": "EPSG:4326",
+        "url": "https://bing.com/maps/default.aspx?cp={y}~{x}&style=x&lvl={zoom}&dir={angle}",
+        "requires_angle": true
+    },
+    {
+        "id": "c-geo",
+        "name": "C-Geo",
+        "crs": "EPSG:2180",
+        "url": "https://www.c-geoportal.pl/map?extent={xmin},{ymin},{xmax},{ymax}"
+    },
+    {
+        "id": "apple",
+        "name": "Apple",
+        "crs": "EPSG:4326",
+        "url": "https://beta.maps.apple.com/?ll={y},{x}"
+    },
+    {
+        "id": "Alookmap",
+        "name": "Alookmap",
+        "crs": "EPSG:4326",
+        "url": "https://lookmap.eu.pythonanywhere.com/#c=14/{y}/{x}&p={y}/{x}&a={angle}/0",
+        "requires_angle": true
+    },
+    {
+        "id": "internet.gov",
+        "name": "Internet.gov",
+        "crs": "EPSG:3857",
+        "url": "https://internet.gov.pl/map/?center={x};{y}&zoom={zoom}",
+        "requires_angle": false
+    },
+	   {
+        "id": "geologia",
+        "name": "geologia",
+        "crs": "EPSG:2180",
+        "url": "https://geologia.pgi.gov.pl/wpkg_kartogeo/?center={x},{y},2180&level={zoom}",
+        "requires_angle": false
+    }
+]

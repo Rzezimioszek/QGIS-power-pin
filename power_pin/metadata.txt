@@ -7,7 +7,7 @@ name=Power Pin PL
 qgisMinimumVersion=3.28
 description=Plugin eksportuje pinezkę do serwiów typu geoportal. Pin to popular polish and world maps portal. Plugin export pin to popular geoportal like serives
 
-version=0.9
+version=1.0
 author=Łukasz Świątek
 email=lukasz.swiatek1996@gmail.com
 
@@ -24,6 +24,11 @@ repository=http://github.com/Rzezimioszek/QGIS-power-pin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog= 
+	1.0
+	Dodano:
+		* nowa forma przycisku z pinezkami (stara wersja możliwa do włączenia w ustawieniach)
+		* wprowadzono dynamiczny zoom w zależności od skali okna mapowego (stara wersja możliwa do włączenia w ustawieniach)
+		* optymalizacja działania kodu
 	0.9
 	Dodano:
 		* poprawka linku dla e-mapa.net
