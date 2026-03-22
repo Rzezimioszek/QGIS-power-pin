@@ -5,9 +5,11 @@
 [general]
 name=Power Pin PL
 qgisMinimumVersion=3.28
+qgisMaximumVersion=4.99
+supportsQt6=True
 description=Plugin eksportuje pinezkę do serwiów typu geoportal. Pin to popular polish and world maps portal. Plugin export pin to popular geoportal like serives
 
-version=1.0
+version=1.1
 author=Łukasz Świątek
 email=lukasz.swiatek1996@gmail.com
 
@@ -24,6 +26,11 @@ repository=http://github.com/Rzezimioszek/QGIS-power-pin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog= 
+	1.1
+	Poprawiono:
+		* Dostosowano do QGIS 4 i Qt 6 (PyQt6)
+		* Naprawiono błąd z brakiem odświeżania ikony w trybie kompaktowym
+		* Dodano możliwość uruchomienia portalu bezpośrednio z listy (dwuklik) - PointTool bugfix
 	1.0
 	Dodano:
 		* nowa forma przycisku z pinezkami (stara wersja możliwa do włączenia w ustawieniach)

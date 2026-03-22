@@ -20,9 +20,15 @@
     },
     {
         "id": "geoportal",
-        "name": "Geoportal",
+        "name": "Geoportal Krajowy",
         "crs": "EPSG:2180",
         "url": "https://mapy.geoportal.gov.pl/?bbox={xmin},{ymin},{xmax},{ymax}&variant=KATASTER"
+    },
+        {
+        "id": "geoportalgik",
+        "name": "Geoportal Geodezja i Kartografia",
+        "crs": "EPSG:4326",
+        "url": "https://mapy.geoportal.gov.pl/imapnext/imap/index.html?moduleId=modulGiK&mapview={y},{x},{scale}s"
     },
     {
         "id": "geoportal2",
