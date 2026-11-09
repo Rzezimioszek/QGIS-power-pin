@@ -1,0 +1,101 @@
+# This file contains metadata for your plugin.
+
+# This file should be included when you package your plugin.
+# Mandatory items:
+
+[general]
+name=Power Pin PL
+qgisMinimumVersion=3.28
+qgisMaximumVersion=4.99
+supportsQt6=True
+description=Pin a location on the map and open it in popular Polish and world map portals (Geoportal, Google Maps, StreetView, OSM, e-mapa and more). / Wskaż miejsce pinezką i otwórz je w popularnych portalach mapowych.
+
+version=1.2
+author=Łukasz Świątek
+email=lukasz.swiatek1996@gmail.com
+
+about= 
+	PL: Wtyczka służy do otwierania portali mapowych w stylu geoportalu po przez wskazanego pinezką miejsca.
+	EN: The plugin is used to open map portals in the geoportal style by indicating a location with a pin. 
+
+tracker=https://github.com/Rzezimioszek/QGIS-power-pin/issues
+repository=https://github.com/Rzezimioszek/QGIS-power-pin
+# End of mandatory metadata
+
+# Recommended items:
+
+hasProcessingProvider=no
+# Uncomment the following line and add your changelog:
+changelog= 
+	1.2
+	Poprawiono:
+		* Tryb kompaktowy: zmiana portalu z menu działa poprawnie
+		* Po postawieniu pinezki wraca poprzednie narzędzie mapy (mapa nie "zawiesza się"), Esc anuluje
+		* Kierunek (StreetView, StreetEye, Lookmap) liczony jako azymut na elipsoidzie, niezależnie od układu mapy
+		* Lista w ustawieniach: pole wyboru = widoczność ikony, dwuklik = uruchomienie portalu
+		* Pełne sprzątanie przy wyłączaniu wtyczki (dock, narzędzia mapy, tłumaczenia)
+		* Usunięto zbędne pliki deweloperskie z paczki
+	1.1
+	Poprawiono:
+		* Dostosowano do QGIS 4 i Qt 6 (PyQt6)
+		* Naprawiono błąd z brakiem odświeżania ikony w trybie kompaktowym
+		* Dodano możliwość uruchomienia portalu bezpośrednio z listy (dwuklik) - PointTool bugfix
+	1.0
+	Dodano:
+		* nowa forma przycisku z pinezkami (stara wersja możliwa do włączenia w ustawieniach)
+		* wprowadzono dynamiczny zoom w zależności od skali okna mapowego (stara wersja możliwa do włączenia w ustawieniach)
+		* optymalizacja działania kodu
+	0.9
+	Dodano:
+		* poprawka linku dla e-mapa.net
+		* dodano serwis geologia.pgi.gov.pl
+	0.8
+	Dodano:
+		* poprawka błędu chowania ikon
+	0.7 
+	Dodano:
+		* dodano portal internet.gov.pl
+	0.6 
+	Dodano:
+		* dodano portal Apple Maps
+		* dodano portal Apple Lookamp (lookmap.eu.pythonanywhere.com) 
+	0.5 
+	Dodano:
+		* Nowa ikona
+		* dodano portal C-Geoportal
+	0.4 
+	Adds:
+		* New Google maps url, now with pin in choose coords
+		* Corrected path of config file
+		* Message bar messages
+    0.3 
+    Dodano: 
+        * Bing Streeteye
+        * Poprawki okna wyboru wyświetlanych portali
+    Poprawiono:
+        * PermissionError
+    0.2 out of range bug fix
+    0.1 pierwsze wydanie
+
+# Tags are comma separated with spaces allowed
+tags=python, geoportal2, geoportal, google maps, streetview, e-mapa, openstreetmap, osm, geoportal360, polskie serwisy mapowe, pin, power pin, c-geo
+
+homepage=https://github.com/Rzezimioszek/QGIS-power-pin
+category=Web
+icon=map512.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed
+# (or upgraded) can be specified.
+# Check the documentation for more information.
+# plugin_dependencies=
+
+# category=Web
+
+# If the plugin can run on QGIS Server.
+server=False
+

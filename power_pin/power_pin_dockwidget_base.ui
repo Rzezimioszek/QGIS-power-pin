@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PowerPinDockWidgetBase</class>
+ <widget class="QDockWidget" name="PowerPinDockWidgetBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>498</width>
+    <height>340</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Power Pin PL</string>
+  </property>
+  <widget class="QWidget" name="dockWidgetContents">
+   <layout class="QGridLayout" name="gridLayout">
+
+    <item row="0" column="0">
+     <widget class="QCheckBox" name="cb_dynamic_view">
+      <property name="text">
+       <string>Dynamic View (Zoom/Extent)</string>
+      </property>
+      <property name="toolTip">
+       <string>If checked, uses current map scale and extent. If unchecked, uses fixed zoom and point buffer.</string>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::ClickFocus</enum>
+      </property>
+     </widget>
+    </item>
+
+    <item row="1" column="0">
+     <widget class="QCheckBox" name="cb_compact_mode">
+      <property name="text">
+       <string>Compact Mode (Split Button)</string>
+      </property>
+      <property name="toolTip">
+       <string>If checked, shows only one button with the last used portal. Others are in a dropdown.</string>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::ClickFocus</enum>
+      </property>
+     </widget>
+    </item>
+
+    <item row="2" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="pushButton_3">
+        <property name="text">
+         <string>GitHub</string>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>ŁŚ 2026</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+    <item row="3" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Icons on bar - double-click to use (Ikony na pasku - dwuklik uruchamia)</string>
+      </property>
+     </widget>
+    </item>
+
+    <item row="4" column="0">
+     <widget class="QListWidget" name="listWidget">
+      <property name="focusPolicy">
+       
+       <enum>Qt::ClickFocus</enum>
+      </property>
+      <property name="editTriggers">
+       
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::NoSelection</enum>
+      </property>
+     </widget>
+    </item>
+
+    <item row="5" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Save (Zapisz)</string>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
